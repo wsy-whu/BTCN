@@ -95,7 +95,22 @@ test_loader  = DataLoader(test_set,  batch_size=BATCH_SIZE, shuffle=False)
 # 3. Model Architecture
 # ------------------------------------------------------------------
 class TemporalBlock(nn.Module):
-    """Single 1-D causal convolution block with ReLU + Dropout.(just for reference)"""
+    """
+    Single 1-D causal convolution block with ReLU + Dropout (provided only as a reference).
+
+    Spatial handling:
+    - If county-level spatial features are aggregated by mean, the result is a scalar per county,
+      so the data fed into the model are effectively 1-D sequences (channels, timesteps).
+    - If the features are represented by a histogram (hist), each county becomes a 2-D map.
+      In that case the block must be replaced by a 2-D causal convolution;
+      the 1-D code shown here is just for illustration.
+
+    Temporal depth:
+    N_TIMESTEPS = 6    # number of time steps in every input sample
+
+    With causal padding = (kernel – 1) * dilation, the receptive field always stays inside
+    the past, ensuring no leakage from the future across these six time steps.
+    """
     def __init__(self, in_ch: int, out_ch: int, kernel: int, dilation: int, dropout: float = 0.0):
         super().__init__()
         padding = (kernel - 1) * dilation
